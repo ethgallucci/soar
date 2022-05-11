@@ -13,6 +13,20 @@ Adds support for evmos, implements unit-tests
 cargo install soar-rpc
 ```
 
+## Usage
+The queries you already know and love, in the command line.
+
+
+```sh
+soar gaia --abci-info
+```
+
+```sh
+soar akash --block-by-height 13021
+```
+```sh
+soar juno --unconfirmed-txs 5
+```
 ## Roadmap
 * Allow endpoints to be determined by the user instead of relying on a single node to maintain constant uptime.
 * Integrate suppport for all other CosmosSDK-based chains.
