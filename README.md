@@ -5,9 +5,13 @@
 ### advisory
 This is a simple weekend project I wanted to build to further learn what you can query about a CosmosSDK chain over RPC, and why it can be useful for gathering information. This is not a full-fledged project of mine, as I'm still wrapping up the Fall semester and have been a bit too busy with finals to build this into something like a full Rust fork of [strangelove-ventures](https://github.com/strangelove-ventures)' [lens](https://github.com/strangelove-ventures/lens).
 
-
 ## v0.1.3
 Adds support for evmos, implements unit-tests
+
+## Install
+```sh
+cargo install soar-rpc
+```
 
 ## Roadmap
 * Allow endpoints to be determined by the user instead of relying on a single node to maintain constant uptime.
