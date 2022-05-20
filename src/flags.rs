@@ -11,11 +11,16 @@ pub fn usage() {
     println!("soar is an rpc command line tool for the interchain\n\n\
     usage:\nsoar [chain] --block-by-height [height]
     ");
+    println!("you can also provide your own endpoints to soar:\nsoar [endpoint] [flags] [params]");
     println!("flags:\n\n--abci-info\n--block-by-height [height]");
     println!("--block-by-hash [hash]\n--block-results [height]\n--block-search [query] [page] [per_page] [order_by]\n\
     --blockchain [min_height] [max_height]\n--broadcast-evidence [evidence]\n--broadcast-tx-async [tx]\n\
     --unconfirmed-txs [limit]
     ");
+}
+
+pub struct ProvidedEndpoint{
+    endpoint: String
 }
 
 pub fn parse_chain(args: Vec<String>) -> Option<Chain> {
