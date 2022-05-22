@@ -29,7 +29,11 @@ pub struct ChainRPC {
 }
 
 impl ChainRPC {
-    pub fn new_and_launch(
+    pub fn launch(&self, q: &str) -> Result <String, ()> {
+        Ok(format_response(&self.endpoint, &q).unwrap())
+    }
+
+    pub fn new_and_launch_from_chain(
         chain: Chain,
         query: &str,
     ) -> Result<ChainRPC, Box<dyn std::error::Error>> {
@@ -101,6 +105,18 @@ impl ChainRPC {
     fn terra(q: &str) -> ChainRPC {
         let endpoint = "https://terra-rpc.easy2stake.com/";
         ChainRPC::launch_from_endpoint(endpoint, q)
+    }
+}
+
+impl From<String> for ChainRPC {
+    fn from(s: String) -> ChainRPC {
+        ChainRPC { endpoint: s, last_response: None }
+    }
+}
+
+impl From<ChainRPC> for String {
+    fn from(c: ChainRPC) -> String {
+        c.endpoint
     }
 }
 

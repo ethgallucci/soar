@@ -11,11 +11,16 @@ pub fn usage() {
     println!("soar is an rpc command line tool for the interchain\n\n\
     usage:\nsoar [chain] --block-by-height [height]
     ");
+    println!("you can also provide your own endpoints to soar:\nsoar [endpoint] [flags] [params]");
     println!("flags:\n\n--abci-info\n--block-by-height [height]");
     println!("--block-by-hash [hash]\n--block-results [height]\n--block-search [query] [page] [per_page] [order_by]\n\
     --blockchain [min_height] [max_height]\n--broadcast-evidence [evidence]\n--broadcast-tx-async [tx]\n\
     --unconfirmed-txs [limit]
     ");
+}
+
+pub struct ProvidedEndpoint{
+    endpoint: String
 }
 
 pub fn parse_chain(args: Vec<String>) -> Option<Chain> {
@@ -54,6 +59,13 @@ pub enum QueryFlag {
     CommitByHeight { height: String },
     ConsensusParamsByHeight { height: String },
     ConsensusState,
+    DumpConsensusState,
+    Genesis,
+    GenesisChunked { chunk: String },
+    Health,
+    NetInfo,
+    NumUnconfirmedTxs,
+    Status,
     UnconfirmedTxs { limit: String },
 }
 
@@ -79,7 +91,14 @@ pub fn from_flag(flag: QueryFlag) -> Option<String> {
         QueryFlag::CheckTx { tx } => Some(format!("check_tx?tx={}", tx)),
         QueryFlag::CommitByHeight { height } => Some(format!("commit?height={}", height)),
         QueryFlag::ConsensusParamsByHeight { height } => Some(format!("consensus_params?height={}", height)),
-        QueryFlag::ConsensusState => None,
+        QueryFlag::ConsensusState => Some("consensus_state?".to_string()),
+        QueryFlag::DumpConsensusState => Some("dump_consensus_state?".to_string()),
+        QueryFlag::Genesis => Some("genesis?".to_string()),
+        QueryFlag::GenesisChunked { chunk } => Some(format!("genesis_chunked?chunk={}", chunk)),
+        QueryFlag::Health => Some("health?".to_string()),
+        QueryFlag::NetInfo => Some("net_info?".to_string()),
+        QueryFlag::NumUnconfirmedTxs => Some("num_unconfirmed_txs?".to_string()),
+        QueryFlag::Status => Some("status?".to_string()),
         QueryFlag::UnconfirmedTxs { limit } => Some(format!("unconfirmed_txs?limit={}", limit)),
     }
 }
@@ -103,6 +122,17 @@ pub fn parse_flags(args: Vec<String>) -> Result<QueryFlag, ParseError> {
             }),
             "--broadcast-evidence" => Ok(QueryFlag::BroadcastEvidence { evidence: args[3].clone() }),
             "--broadcast-tx-async" => Ok(QueryFlag::BroadcastTxAsync { tx: args[3].clone() }),
+            "--check-tx" => Ok(QueryFlag::CheckTx { tx: args[3].clone() }),
+            "--commit-by-height" => Ok(QueryFlag::CommitByHeight { height: args[3].clone() }),
+            "--consensus-params-by-height" => Ok(QueryFlag::ConsensusParamsByHeight { height: args[3].clone() }),
+            "--consensus-state" => Ok(QueryFlag::ConsensusState),
+            "--dump-consensus-state" => Ok(QueryFlag::DumpConsensusState),
+            "--genesis" => Ok(QueryFlag::Genesis),
+            "--genesis-chunked" => Ok(QueryFlag::GenesisChunked { chunk: args[3].clone() }),
+            "--health" => Ok(QueryFlag::Health),
+            "--net-info" => Ok(QueryFlag::NetInfo),
+            "--num-unconfirmed-txs" => Ok(QueryFlag::NumUnconfirmedTxs),
+            "--status" => Ok(QueryFlag::Status),
             "--unconfirmed-txs" => Ok(QueryFlag::UnconfirmedTxs { limit: args[3].clone() }),
 
             _ => Err(ParseError {}),
