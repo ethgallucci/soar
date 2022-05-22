@@ -16,7 +16,7 @@ cargo install soar-rpc
 ## Usage
 The queries you already know and love, in the command line.
 
-
+### Provided default endpoints
 ```sh
 soar gaia --abci-info
 ```
@@ -26,6 +26,11 @@ soar akash --block-by-height 13021
 ```
 ```sh
 soar juno --unconfirmed-txs 5
+```
+
+### With custom endpoints
+```sh
+soar http://public-rpc.regen.vitwit.com:26657/ --abci-info
 ```
 ## Roadmap
 * Allow endpoints to be determined by the user instead of relying on a single node to maintain constant uptime.

@@ -10,6 +10,7 @@ mod flags;
 use flags::{parse_chain, parse_flags, from_flag, usage};
 
 fn main() {
+    pretty_env_logger::init();
     let args: Vec<String> = env::args().collect();
     
     if args.iter().len() > 2 {
@@ -18,13 +19,14 @@ fn main() {
             let query = from_flag(parse_flags(args).unwrap()).unwrap();
             let rpc = ChainRPC::new_and_launch_from_chain(chain_choice, &query.as_str()).unwrap();
             let res = rpc.last_response.unwrap();
-            println!("{}", res)
+            log::info!("Response received: {}", res)
         } else {
             let provided_endpoint = args[1].clone();
             let query = from_flag(parse_flags(args).unwrap()).unwrap();
-            let rpc = ChainRPC::from(provided_endpoint);
+            let rpc = ChainRPC::from(provided_endpoint.clone());
             let res = rpc.launch(&query).unwrap();
-            println!("{}", res)
+            log::info!("Response received: {}", res);
+            log::info!("From endpoint: {}", provided_endpoint)
         }
     } else {
         usage()
