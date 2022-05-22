@@ -2,7 +2,7 @@
 name = "soar-rpc"
 authors = ["Ethan Gallucci"]
 description = "interface for querying Cosmos SDK based blockchains over RPC"
-version = "0.1.3"
+version = "0.1.4"
 edition = "2021"
 repository = "https://github.com/ethgallucci/soar"
 license = "MIT"
