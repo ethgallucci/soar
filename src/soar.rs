@@ -12,10 +12,10 @@ fn main() {
     pretty_env_logger::init();
     log::info!("soar to new heights...");
 
-    registry_serialization()
+    try_registry_sync()
 }
 
-fn registry_serialization() {
+fn try_registry_sync() {
     use registry::*;
 
     let registry = Registry::new();
@@ -30,7 +30,7 @@ mod tests {
     use super::registry::*;
 
     #[test]
-    fn registry_serialization() {
+    fn registry_sync_test() {
         let registry = Registry::new();
         let chain = Chain::new(registry.recent[6].to_owned());
 

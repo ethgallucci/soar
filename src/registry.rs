@@ -1,6 +1,6 @@
 use std::fs;
-use std::path::{Path, PathBuf};
-use std::{io, io::Read};
+use std::io::Read;
+use std::path::Path;
 
 use serde::{Deserialize, Serialize};
 use serde_json::{to_string_pretty, Value};
@@ -70,7 +70,6 @@ impl From<Registry> for Value {
 impl Registry {
     pub fn new() -> Registry {
         // Pull latest registry files from github
-        use fs::File;
         use std::process::Command;
 
         if let Err(_e) = fs::read_dir(Path::new("chain-registry")) {
@@ -132,6 +131,7 @@ impl Registry {
 }
 
 // launch a query with a formatted response ////////////////////////////////////////////////////////////////
+#[allow(unused)]
 pub fn format_response(e: &str, q: &str) -> Result<String, Box<dyn std::error::Error>> {
     let full = format!("{}{}", e, q);
     let res = ureq::get(&full).call()?.into_string()?;
@@ -145,7 +145,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn registry_serialize() {
+    fn try_registry_sync() {
         let most_rec_reg = Registry::new();
         assert!(
             !(most_rec_reg.recent.is_empty()),
