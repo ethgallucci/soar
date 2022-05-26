@@ -11,7 +11,7 @@ license = "MIT"
 name = "soar"
 test = true
 bench = true
-path = "src/soar.rs"
+path = "src/rpc/soar.rs"
 
 [dependencies]
 log = "0.4.17"

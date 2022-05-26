@@ -1,11 +1,11 @@
-use std::fs;
-use std::io::Read;
-use std::path::Path;
+use std::{fs, hash::Hash, io::Read, path::Path};
 
 use serde::{Deserialize, Serialize};
-use serde_json::{to_string_pretty, Value};
+use serde_json::{to_string_pretty, Value as JsonValue};
 use ureq;
 use walkdir::WalkDir;
+
+pub type Param<T> where T: Into<String> + Eq = (str, T);
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub enum GenericErr {
@@ -13,16 +13,16 @@ pub enum GenericErr {
     QueryErr,
 }
 
-///! A Chain holds a vector of metadata which is usually represented as a serde_json::Value
+///! A Chain holds a vector of metadata which is usually represented as a serde_json::JsonValue
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Chain {
-    pub meta: Value,
+    pub meta: JsonValue,
     pub id: Option<String>,
     pub rpc: Option<Vec<String>>,
 }
 
 impl Chain {
-    pub fn new(meta: Value) -> Self {
+    pub fn new(meta: JsonValue) -> Self {
         Chain {
             meta,
             id: None,
@@ -48,20 +48,20 @@ pub struct ChainRPC {
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Registry {
-    pub recent: Vec<Value>,
+    pub recent: Vec<JsonValue>,
 }
 
-impl From<Value> for Registry {
-    fn from(v: Value) -> Registry {
+impl From<JsonValue> for Registry {
+    fn from(v: JsonValue) -> Registry {
         Registry {
             recent: vec![v.clone()],
         }
     }
 }
 
-impl From<Registry> for Value {
-    fn from(r: Registry) -> Value {
-        Value::from(r.recent)
+impl From<Registry> for JsonValue {
+    fn from(r: Registry) -> JsonValue {
+        JsonValue::from(r.recent)
     }
 }
 
@@ -99,8 +99,8 @@ impl Registry {
         }
     }
 
-    fn dirwalk(path: impl AsRef<Path>) -> Result<Vec<Value>, std::io::Error> {
-        let mut registry_vec: Vec<Value> = vec![];
+    fn dirwalk(path: impl AsRef<Path>) -> Result<Vec<JsonValue>, std::io::Error> {
+        let mut registry_vec: Vec<JsonValue> = vec![];
 
         for entry in WalkDir::new(path)
             .max_depth(2)
@@ -135,7 +135,7 @@ impl Registry {
 pub fn format_response(e: &str, q: &str) -> Result<String, Box<dyn std::error::Error>> {
     let full = format!("{}{}", e, q);
     let res = ureq::get(&full).call()?.into_string()?;
-    let j: serde_json::Value = serde_json::from_str(&res)?;
+    let j: JsonValue = serde_json::from_str(&res)?;
     let pretty = to_string_pretty(&j)?;
     Ok(pretty)
 }
