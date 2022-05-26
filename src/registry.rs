@@ -1,122 +1,133 @@
+use std::fs;
+use std::path::{Path, PathBuf};
+use std::{io, io::Read};
+
 use serde::{Deserialize, Serialize};
-use serde_json::to_string_pretty;
+use serde_json::{to_string_pretty, Value};
 use ureq;
+use walkdir::WalkDir;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub enum GenericErr {
-    PrimeErr,
+    InitErr,
     QueryErr,
 }
 
+///! A Chain holds a vector of metadata which is usually represented as a serde_json::Value
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub enum Chain {
-    Akash,
-    Evmos,
-    Gaia,
-    Juno,
-    Osmosis,
-    Regen,
-    Secret,
-    Sentinel,
-    Stargaze,
-    Terra,
+pub struct Chain {
+    pub meta: Value,
+    pub id: Option<String>,
+    pub rpc: Option<Vec<String>>,
 }
 
+impl Chain {
+    pub fn new(meta: Value) -> Self {
+        Chain {
+            meta,
+            id: None,
+            rpc: None,
+        }
+    }
+
+    pub fn parse_rpc(&mut self) -> Result<Vec<String>, ()> {
+        Ok(self.meta["apis"]["rpc"]
+            .as_array()
+            .iter()
+            .map(|v| serde_json::to_string(&v.clone()).unwrap())
+            .collect::<Vec<String>>())
+    }
+}
+
+///! Structs
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct ChainRPC {
     pub endpoint: String,
     pub last_response: Option<String>,
 }
 
-impl ChainRPC {
-    pub fn launch(&self, q: &str) -> Result <String, ()> {
-        Ok(format_response(&self.endpoint, &q).unwrap())
-    }
+#[derive(Debug, Deserialize, Serialize)]
+pub struct Registry {
+    pub recent: Vec<Value>,
+}
 
-    pub fn new_and_launch_from_chain(
-        chain: Chain,
-        query: &str,
-    ) -> Result<ChainRPC, Box<dyn std::error::Error>> {
-        match chain {
-            Chain::Akash => Ok(ChainRPC::akash(query)),
-            Chain::Evmos => Ok(ChainRPC::evmos(query)),
-            Chain::Gaia => Ok(ChainRPC::gaia(query)),
-            Chain::Juno => Ok(ChainRPC::juno(query)),
-            Chain::Regen => Ok(ChainRPC::regen(query)),
-            Chain::Osmosis => Ok(ChainRPC::osmosis(query)),
-            Chain::Secret => Ok(ChainRPC::secret(query)),
-            Chain::Sentinel => unimplemented!() ,
-            Chain::Stargaze => Ok(ChainRPC::stargaze(query)),
-            Chain::Terra => Ok(ChainRPC::terra(query)),
+impl From<Value> for Registry {
+    fn from(v: Value) -> Registry {
+        Registry {
+            recent: vec![v.clone()],
         }
-    }
-
-    pub fn launch_from_endpoint(endpoint: &str, q: &str) -> ChainRPC {
-        let pretty = format_response(endpoint.clone(), q).unwrap();
-        ChainRPC {
-            endpoint: endpoint.to_string(),
-            last_response: Some(pretty),
-        }
-    }
-
-    // Chains //////////////////////////////////////////////////////////////////
-    // TODO: Impelement the end point functions as a user choice
-    // e.g. user's should input a node they want to connect to
-    fn akash(q: &str) -> ChainRPC {
-        let endpoint = "https://rpc.akash.forbole.com/";
-        ChainRPC::launch_from_endpoint(endpoint, q)
-    }
-
-    fn evmos(q: &str) -> ChainRPC {
-        let endpoint = "https://rpc-osmosis.blockapsis.com/";
-        ChainRPC::launch_from_endpoint(endpoint, q)
-    }
-
-    fn gaia(q: &str) -> ChainRPC {
-        let endpoint = "https://rpc.cosmos.network:443/";
-        ChainRPC::launch_from_endpoint(endpoint, q)
-    }
-
-    fn juno(q: &str) -> ChainRPC {
-        let endpoint = "https://rpc.juno.pupmos.network/";
-        ChainRPC::launch_from_endpoint(endpoint, q)
-    }
-
-    fn osmosis(q: &str) -> ChainRPC {
-        let endpoint = "https://rpc-osmosis.blockapsis.com/";
-        ChainRPC::launch_from_endpoint(endpoint, q)
-    }
-
-    fn regen(q: &str) -> ChainRPC {
-        let endpoint = "http://public-rpc.regen.vitwit.com:26657/";
-        ChainRPC::launch_from_endpoint(endpoint, q)
-    }
-
-    fn secret(q: &str) -> ChainRPC {
-        let endpoint = "https://rpc-secret.scrtlabs.com/secret-4/rpc/";
-        ChainRPC::launch_from_endpoint(endpoint, q)
-    }
-
-    fn stargaze(q: &str) -> ChainRPC {
-        let endpoint = "https://rpc.stargaze-apis.com/";
-        ChainRPC::launch_from_endpoint(endpoint, q)
-    }
-
-    fn terra(q: &str) -> ChainRPC {
-        let endpoint = "https://terra-rpc.easy2stake.com/";
-        ChainRPC::launch_from_endpoint(endpoint, q)
     }
 }
 
-impl From<String> for ChainRPC {
-    fn from(s: String) -> ChainRPC {
-        ChainRPC { endpoint: s, last_response: None }
+impl From<Registry> for Value {
+    fn from(r: Registry) -> Value {
+        Value::from(r.recent)
     }
 }
 
-impl From<ChainRPC> for String {
-    fn from(c: ChainRPC) -> String {
-        c.endpoint
+///! Registry
+/// (*) The registry struct keeps a record of the cosmos/chain-registry repository
+impl Registry {
+    pub fn new() -> Registry {
+        // Pull latest registry files from github
+        use fs::File;
+        use std::process::Command;
+
+        if let Err(_e) = fs::read_dir(Path::new("chain-registry")) {
+            Command::new("git")
+                .args([
+                    "clone",
+                    "https://github.com/cosmos/chain-registry",
+                    // TODO: Add path to clone repo
+                ])
+                .status()
+                .expect("Failed to get latest registry");
+
+            let regpath = Path::new("chain-registry");
+
+            // look at every folder in the registry, parse all chain.json files
+            let registry_vals = crate::registry::Registry::dirwalk(regpath).unwrap();
+
+            // Parse all RPC endpoints listed
+            Registry {
+                recent: registry_vals,
+            }
+        } else {
+            // Don't need to pull changes
+            Registry {
+                recent: crate::registry::Registry::dirwalk(Path::new("chain-registry")).unwrap(),
+            }
+        }
+    }
+
+    fn dirwalk(path: impl AsRef<Path>) -> Result<Vec<Value>, std::io::Error> {
+        let mut registry_vec: Vec<Value> = vec![];
+
+        for entry in WalkDir::new(path)
+            .max_depth(2)
+            .into_iter()
+            .filter_map(|e| e.ok())
+        {
+            let f_name = entry.file_name().to_string_lossy();
+            log::info!("peeking: {}", f_name);
+            if f_name.contains("chain.json") {
+                let mut chain = fs::File::open(entry.path())?;
+                let mut buf_string = String::new();
+                chain.read_to_string(&mut buf_string)?;
+
+                registry_vec.push(
+                    serde_json::from_str(buf_string.as_str()).expect(
+                        format!(
+                            "Failed to read {}/chain.json",
+                            entry.path().to_string_lossy()
+                        )
+                        .as_str(),
+                    ),
+                );
+            }
+        }
+
+        Ok(registry_vec)
     }
 }
 
@@ -127,4 +138,18 @@ pub fn format_response(e: &str, q: &str) -> Result<String, Box<dyn std::error::E
     let j: serde_json::Value = serde_json::from_str(&res)?;
     let pretty = to_string_pretty(&j)?;
     Ok(pretty)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn registry_serialize() {
+        let most_rec_reg = Registry::new();
+        assert!(
+            !(most_rec_reg.recent.is_empty()),
+            "Failed to serialize registry"
+        );
+    }
 }
