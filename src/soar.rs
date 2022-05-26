@@ -1,6 +1,11 @@
-// TODO: Allow user to input RPC endpoints instead of pigeon-holing them to one
-// Finish writing tests for currently supported chains
-// Add many more chains...
+// TODO: Continue prototyping v0.2.0
+//  Build out composable rpc query methods for the Chain struct
+////////////////////////////////////////////////////////////////
+/// FIXME: Registry dirwalker has a breaking bug, it's only
+///   parsing a single folder's chain.json. Not very dirwalker like!
+///   Need to patch that and further iterate on the Chain.parse_rpc()
+///   method to isolate the url address from the json array before
+///   building out the composable rpc query methods
 mod registry;
 
 fn main() {
@@ -15,7 +20,7 @@ fn registry_serialization() {
 
     let registry = Registry::new();
     let mut chain = Chain::new(registry.recent[0].to_owned());
-    let rpc_e = chain.parse_rpc();
+    let _rpc_e = chain.parse_rpc();
 
     log::info!("Serialized Registry (snippet): {:?}", chain.meta);
 }
