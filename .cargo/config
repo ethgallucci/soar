@@ -1,0 +1,2 @@
+[alias]
+unit-registry = "test --test ut_registry -- --nocapture"

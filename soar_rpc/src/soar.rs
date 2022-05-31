@@ -7,6 +7,10 @@
 ///   method to isolate the url address from the json array before
 ///   building out the composable rpc query methods
 mod registry;
+mod rest;
+
+#[allow(unused_imports)]
+use rest::get::{bank, distrib, gov, mint};
 
 fn main() {
     pretty_env_logger::init();
@@ -23,17 +27,4 @@ fn try_registry_sync() {
     let _rpc_e = chain.parse_rpc();
 
     log::info!("Serialized Registry (snippet): {:?}", chain.meta);
-}
-
-#[cfg(test)]
-mod tests {
-    use super::registry::*;
-
-    #[test]
-    fn registry_sync_test() {
-        let registry = Registry::new();
-        let chain = Chain::new(registry.recent[6].to_owned());
-
-        log::info!("Serialized Registry (snippet): {:?}", chain.meta);
-    }
 }

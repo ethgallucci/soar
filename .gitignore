@@ -1,1 +1,10 @@
+/*/target
 /target
+/chain-registry
+/soar_rpc/chain-registry
+
+# Added by cargo
+#
+# already existing elements were commented out
+
+#/target

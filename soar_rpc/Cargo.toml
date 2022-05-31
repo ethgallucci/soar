@@ -1,0 +1,29 @@
+[package]
+name = "soar-rpc"
+authors = ["Ethan Gallucci"]
+description = "interface for querying Cosmos SDK based blockchains over RPC"
+version = "0.1.4"
+edition = "2021"
+repository = "https://github.com/ethgallucci/soar"
+license = "MIT"
+
+[lib]
+path = "src/lib.rs"
+
+[[bin]]
+name = "soar"
+test = true
+bench = true
+path = "src/soar.rs"
+
+[dependencies]
+log = "0.4.17"
+pretty_env_logger = "0.4.0"
+serde = { version = "1.0", default-features = false, features = ["derive"] }
+serde_json = "1.0.79"
+ureq = "2.4.0"
+walkdir = "2.3.2"
+
+[profile.release]
+overflow-checks = true
+opt-level = 1

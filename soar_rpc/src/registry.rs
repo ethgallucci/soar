@@ -1,11 +1,17 @@
-use std::{fs, hash::Hash, io::Read, path::Path};
+use std::{fs, io::Read, path::Path};
 
 use serde::{Deserialize, Serialize};
 use serde_json::{to_string_pretty, Value as JsonValue};
 use ureq;
 use walkdir::WalkDir;
 
-pub type Param<T> where T: Into<String> + Eq = (str, T);
+#[allow(dead_code)]
+pub enum Param<T>
+where
+    T: Into<String> + Eq,
+{
+    Generic(Box<str>, T),
+}
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub enum GenericErr {
