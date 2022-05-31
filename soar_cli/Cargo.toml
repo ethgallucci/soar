@@ -1,8 +1,8 @@
 [package]
-name = "soar-rpc"
+name = "soar-cli"
 authors = ["Ethan Gallucci"]
 description = "interface for querying Cosmos SDK based blockchains over RPC"
-version = "0.1.4"
+version = "0.1.0"
 edition = "2021"
 repository = "https://github.com/ethgallucci/soar"
 license = "MIT"
